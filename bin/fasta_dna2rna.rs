@@ -18,7 +18,7 @@
 use std::io::{self, Write};
 
 use clap::Parser;
-use stringzilla::sz::lookup;
+use stringzilla::lookup;
 
 use fasterfasta::files::{
     finish_or_exit, Destination, Presentation, RecordWriter, Rendering, RunOutcome,
@@ -57,7 +57,8 @@ impl<W: Write> Transcriber<W> {
         if self.scratch.len() < length {
             self.scratch.resize(length, 0);
         }
-        lookup(&mut self.scratch[..length], record.sequence, self.table);
+        lookup(&mut self.scratch[..length], record.sequence, self.table)
+            .expect("scratch is sized to the sequence");
 
         self.writer.write_parts(
             record.header_without_sigil(),

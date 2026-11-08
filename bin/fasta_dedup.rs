@@ -31,7 +31,7 @@
 use std::io::{self, Write};
 
 use clap::Parser;
-use stringzilla::sz::{equal, hash_with_seed, lookup};
+use stringzilla::{equal, hash_with_seed, lookup};
 
 use fasterfasta::files::{
     finish_or_exit, Destination, InputFile, Presentation, RecordWriter, Rendering, RunOutcome,
@@ -87,7 +87,7 @@ fn reverse_complement_into(sequence: &[u8], complements: &Complements, scratch: 
     let table = complements.table_for(sequence);
     scratch.clear();
     scratch.resize(sequence.len(), 0);
-    lookup(scratch.as_mut_slice(), sequence, *table);
+    lookup(scratch.as_mut_slice(), sequence, *table).expect("scratch is sized to the sequence");
     scratch.reverse();
 }
 

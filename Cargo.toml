@@ -3,6 +3,7 @@ authors = ["Ash Vardanian <1983160+ashvardanian@users.noreply.github.com>"]
 categories = ["command-line-utilities", "science"]
 description = "Command-line utilities for processing memory-mapped FASTA and FASTQ files"
 edition = "2021"
+rust-version = "1.100"
 keywords = ["bioinformatics", "fasta", "fastq", "cli", "sequence-analysis"]
 license = "Apache-2.0"
 name = "fasterfasta"
@@ -25,18 +26,16 @@ zstd = ["dep:zstd"]
 bzip2 = {version = "0.6", optional = true}
 clap = {version = "4.5", features = ["derive"]}
 flate2 = {version = "1.1", default-features = false, features = ["zlib-rs"], optional = true}
-# StringZilla links the same worker pool with `use forkunion as _;`, which re-exports nothing,
-# so the scheduler has to name it directly. Cargo unifies the two into one build.
-forkunion = "3.0.2"
+forkunion = { version = "4.0.0-rc.1", git = "https://github.com/ashvardanian/ForkUnion" }
 lz4_flex = {version = "0.14", optional = true}
-lzma-rust2 = {version = "0.19", default-features = false, features = ["std", "xz", "encoder", "optimization"], optional = true}
+lzma-rust2 = {version = "0.25", default-features = false, features = ["std", "xz", "encoder", "optimization"], optional = true}
 memmap2 = "0.9"
 same-file = "1.0"
 # Kept ahead of its first use: deduplication and sorting both need a tape of borrowed
-# spans over one payload, and StringZilla already pulls the same crate in.
+# spans over one payload.
 stringtape = "2.5"
-stringzilla = {version = "5", features = ["cpus"]}
-zstd = {version = "0.13", default-features = false, optional = true}
+stringzilla = { version = "6.0.0-rc.1", git = "https://github.com/ashvardanian/StringZilla" }
+zstd = {version = "0.14", default-features = false, optional = true}
 
 [dev-dependencies]
 tempfile = "3.10"

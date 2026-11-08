@@ -215,3 +215,6 @@ __marimo__/
 
 # Local override pointing at sibling checkouts, which exist only on a dev machine.
 /.cargo/
+
+# macOS Finder metadata
+.DS_Store

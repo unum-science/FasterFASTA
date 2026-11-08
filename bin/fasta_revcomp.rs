@@ -20,7 +20,7 @@
 use std::io::{self, Write};
 
 use clap::Parser;
-use stringzilla::sz::lookup;
+use stringzilla::lookup;
 
 use fasterfasta::files::{
     finish_or_exit, Destination, Presentation, RecordWriter, Rendering, RunOutcome,
@@ -65,7 +65,7 @@ impl<W: Write> ReverseComplementer<W> {
         let table = *self.complements.table_for(record.sequence);
 
         let complemented = scratch_of(&mut self.sequence_scratch, record.sequence.len());
-        lookup(complemented, record.sequence, table);
+        lookup(complemented, record.sequence, table).expect("scratch is sized to the sequence");
         complemented.reverse();
 
         let reversed_quality = scratch_of(&mut self.quality_scratch, record.quality.len());

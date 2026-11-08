@@ -19,7 +19,7 @@
 
 use std::io;
 
-use stringzilla::sz::{bytesum, find, find_byteset, hash_with_seed, rfind, Byteset};
+use stringzilla::{bytesum, find, find_byteset, hash_with_seed, rfind, Byteset};
 
 // region: Records
 

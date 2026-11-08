@@ -24,7 +24,7 @@ use std::ops::Range;
 
 use clap::Parser;
 
-use stringzilla::sz::{find_byteset, rfind_byteset, Byteset};
+use stringzilla::{find_byteset, rfind_byteset, Byteset};
 
 use fasterfasta::files::{
     finish_or_exit, Destination, Presentation, RecordWriter, Rendering, RunOutcome,
@@ -49,7 +49,7 @@ struct TrimSettings {
 fn acceptable_scores(cutoff: u8) -> Byteset {
     let mut set = Byteset::new();
     for score in cutoff..=93 {
-        set.add_u8(phred33_to_ascii(score));
+        set.add(phred33_to_ascii(score));
     }
     set
 }

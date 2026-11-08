@@ -10,7 +10,7 @@ use std::io::{self, Read};
 use std::ops::Range;
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use forkunion::{DynamicScheduler, IntoParallelIterator, ThreadPool, Topology};
+use forkunion::{self as fu, DynamicScheduler, IntoParallelIterator, ThreadPool, Topology};
 
 use crate::blocks::BlockAccess;
 use crate::files::{
@@ -92,7 +92,10 @@ impl Parallelism {
         let topology = Topology::new()
             .map_err(|error| io::Error::other(format!("cannot read the machine: {error:?}")))?;
         let threads = match self.threads {
-            0 => topology.logical_cores_count().max(1),
+            0 => topology
+                .logical_cores_count()
+                .map_err(|error| io::Error::other(format!("cannot count cores: {error:?}")))?
+                .max(1),
             asked => asked,
         };
         if threads <= 1 {
@@ -102,7 +105,7 @@ impl Parallelism {
                 order,
             });
         }
-        let pool = ThreadPool::try_spawn(&topology, threads).map_err(|error| {
+        let pool = ThreadPool::spawn(&topology, threads).map_err(|error| {
             io::Error::other(format!("cannot spawn {threads} worker threads: {error:?}"))
         })?;
         Ok(Workers {
@@ -276,18 +279,20 @@ fn run_round<T: Send + Sync>(
             }
         }
         (_, RecordOrder::Preserved) => {
-            forkunion::for_each_prong_mut_dynamic(pool, &mut slots[..tasks], |slot, prong| {
-                slot.attempt(&cancelled, prong.task_index, &run);
-            });
+            fu::for_each_task_mut_dynamic(pool, &mut slots[..tasks], |slot, task_index, _at| {
+                slot.attempt(&cancelled, task_index, &run);
+            })
+            .map_err(io::Error::other)?;
         }
         (_, RecordOrder::Ignored) => {
-            forkunion::fold_with_scratch(
+            fu::fold_with_scratch(
                 pool,
                 (0..tasks).into_par_iter(),
                 DynamicScheduler,
                 slots,
-                |slot, task_index, _prong| slot.attempt(&cancelled, task_index, &run),
-            );
+                |slot, _item, task_index, _at| slot.attempt(&cancelled, task_index, &run),
+            )
+            .map_err(io::Error::other)?;
         }
     }
 
@@ -905,7 +910,7 @@ mod tests {
 
     fn pool_of(threads: usize) -> (Topology, ThreadPool) {
         let topology = Topology::new().unwrap();
-        let pool = ThreadPool::try_spawn(&topology, threads).unwrap();
+        let pool = ThreadPool::spawn(&topology, threads).unwrap();
         (topology, pool)
     }
 
@@ -1381,7 +1386,11 @@ mod tests {
 
         // Zero means one thread per logical core, which is one machine's answer rather than a
         // fixed number, so the expectation is derived the same way the spawn derives it.
-        let cores = Topology::new().unwrap().logical_cores_count().max(1);
+        let cores = Topology::new()
+            .unwrap()
+            .logical_cores_count()
+            .unwrap()
+            .max(1);
         let (expect_ordered, expect_unordered) = match cores {
             1 => (1, 1),
             many => (many * STATES_PER_THREAD, many),
